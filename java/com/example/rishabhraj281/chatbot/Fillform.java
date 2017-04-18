@@ -46,7 +46,7 @@ public class Fillform extends AppCompatActivity {
     TextToSpeech t1;
     ArrayList <EditText> ed = new ArrayList<EditText>();
     ArrayList <TextView> tv = new ArrayList<TextView>();
-    Button btn_prev, btn_repeat, btn_next,btn_audio;
+    Button btn_prev, btn_repeat, btn_next,btn_audio,btn_submit;
     EditText c_ed;
     TextView c_tv;
     int fields = 0;
@@ -55,14 +55,15 @@ public class Fillform extends AppCompatActivity {
     private final int REQ_CODE_SPEECH_INPUT = 100;
     private String language_selected = "en-IND";
     //customise for common questions
-    /*final String Q_PHONE = "phone";
-    final String Q_DOB = "dob";
-    final String Q_EMAIL = "email";
-    final String Q_NONE = "none";
-    static final Set<String> q_phone = new HashSet<String>(Arrays.asList("telephone", "phone", "landline"));
+    final int Q_NONE = 0;
+    final int Q_PHONE = 1;
+    final int Q_EMAIL = 2;
+    final int Q_DOB = 3;
+    final int Q_ADDR = 4;
     static final Set<String> q_dob = new HashSet<String>(Arrays.asList("date of birth", "dob", "d.o.b"));
     static final Set<String> q_email = new HashSet<String>(Arrays.asList("email", "mail"));
-*/
+    static final Set<String> q_phone = new HashSet<String>(Arrays.asList("telephone", "phone", "landline"));
+    int q_type;
     String file_name;
     String file_path;
     @Override
@@ -78,6 +79,7 @@ public class Fillform extends AppCompatActivity {
         btn_repeat = (Button) findViewById(R.id.btn_repeat);
         btn_next = (Button) findViewById(R.id.btn_next);
         btn_audio = (Button) findViewById(R.id.btn_audio);
+        btn_submit = (Button) findViewById(R.id.btn_submit);
         c_ed = (EditText) findViewById(R.id.curr_ed);
         c_tv = (TextView) findViewById(R.id.curr_tv);
         t1=new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
@@ -100,7 +102,9 @@ public class Fillform extends AppCompatActivity {
             e.printStackTrace();
         }
         fields = tv.size();
-        //Log.d("Fillform","fields" + fields);
+        Log.d("Fillform","fields" + fields);
+        Log.d("Fillform","file_name" + file_name);
+        Log.d("Fillform","file_path" + file_path);
         fillform(fields,q_no);
 
         btn_audio.setOnClickListener(new View.OnClickListener(){
@@ -113,6 +117,17 @@ public class Fillform extends AppCompatActivity {
                     TimeUnit.SECONDS.sleep(1);
                     promptSpeechInput(REQ_CODE_SPEECH_INPUT);
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        btn_submit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    fillPDF(file_path,file_name);
+                    finish();
+                } catch (DocumentException e) {
                     e.printStackTrace();
                 }
             }
@@ -164,7 +179,10 @@ public class Fillform extends AppCompatActivity {
             public void onClick(View v){
                 String answer = c_ed.getText().toString();
                 ed.get(q_no).setText(answer);
-                q_no += 1;
+                if(q_no < fields){
+                    q_no += 1;
+                }
+
                 fillform(fields,q_no);
             }
         });
@@ -201,43 +219,75 @@ public class Fillform extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "Trying to fill an empty form!", Toast.LENGTH_LONG).show();
         }
         else{
-            if(q_no < fields) {
-                String question = tv.get(q_no).getText().toString();
-                c_tv.setText(question);
-                String[] words = question.split(" ");
-                //String q_type = getQuestionType(words);
-                String answer = ed.get(q_no).getText().toString();
-                c_ed.setText(answer);
+            String question = tv.get(q_no).getText().toString();
+            c_tv.setText(question);
+            String answer = ed.get(q_no).getText().toString();
+            c_ed.setText(answer);
+
+            String[] words = question.split(" ");
+            q_type = getQuestionType(words);
+            handleSpecificQuestions(q_type);
+
+            if(q_no < fields-1) {
+                btn_next.setVisibility(View.VISIBLE);
+                btn_submit.setEnabled(false);
+                btn_submit.setBackgroundColor(this.getResources().getColor(R.color.white));
+                btn_submit.setTextColor(this.getResources().getColor(R.color.black));
+                if(q_no == 0) btn_prev.setVisibility(View.INVISIBLE);
+                else btn_prev.setVisibility(View.VISIBLE);
             }
             else{
-                try {
+                /*try {
                     fillPDF(file_path,file_name);
                     finish();
                 } catch (DocumentException e) {
                     e.printStackTrace();
-                }
+                }*/
+                btn_next.setVisibility(View.INVISIBLE);
+                btn_submit.setEnabled(true);
+                btn_submit.setBackgroundColor(this.getResources().getColor(R.color.submit_form_active));
+                btn_submit.setTextColor(this.getResources().getColor(R.color.white));
             }
         }
     }
+    void handleSpecificQuestions(int q_type){
+        if(q_type == Q_NONE || q_type == Q_PHONE || q_type == Q_EMAIL){
+            //these simply require validation
+            return;
+        }
+        else if(q_type == Q_DOB){
 
-    /*String getQuestionType(String[] words){
-        String result = Q_NONE;
+        }
+        else if(q_type == Q_ADDR){
+
+        }
+        else{
+
+        }
+    }
+
+    int getQuestionType(String[] words){
+        int result = Q_NONE;
         for(int i=0; i<words.length; i++){
-            if(q_email.contains(words[i])){
+            String curr = words[i].toLowerCase();
+            if(q_email.contains(curr)){
                 result = Q_EMAIL;
+                break;
             }
-            else if(q_phone.contains(words[i])){
+            else if(q_phone.contains(curr)){
                 result = Q_PHONE;
+                break;
             }
-            else if(q_dob.contains(words[i])){
+            else if(q_dob.contains(curr)){
                 result = Q_DOB;
+                break;
             }
             else{
 
             }
         }
         return result;
-    }*/
+    }
     private void fillPDF(String file_path, String file_name) throws DocumentException {
         Document doc = new Document();
         try {
@@ -256,6 +306,29 @@ public class Fillform extends AppCompatActivity {
         }
 
     }
+
+    String modifyAndValidateInput(String s){
+        if(q_type==Q_EMAIL){
+            s = s.replaceAll("at the rate", "@");
+            s = s.replaceAll("dot",".");
+            s = s.replaceAll("underscore","_");
+            s = s.replaceAll(" ","");
+            s = s.toLowerCase();
+        }
+        else if(q_type == Q_PHONE){
+            s = s.replaceAll("-","");
+            s = s.replaceAll("to","2");
+            s = s.replaceAll(" ","");
+            boolean valid_num = s.matches("[0-9]+") && (s.length() == 10) || (s.length() == 11 );
+            if(!valid_num){
+                Toast.makeText(getApplicationContext(), getString(R.string.invalid_input), Toast.LENGTH_SHORT).show();
+                String toSpeak = getString(R.string.invalid_input);
+                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
+            }
+        }
+        return s;
+    }
+
 
     private void readPDF(String file_path) throws IOException {
         Document doc = new Document();
@@ -360,7 +433,7 @@ public class Fillform extends AppCompatActivity {
         if(resultCode == RESULT_OK && data!=null){
             ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             s = result.get(0);
-            c_ed.setText(s);
+            c_ed.setText(modifyAndValidateInput(s));
         }
 
     }

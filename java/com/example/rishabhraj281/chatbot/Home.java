@@ -1,7 +1,11 @@
 package com.example.rishabhraj281.chatbot;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +19,7 @@ public class Home extends AppCompatActivity {
     Button b1,b2;
     private static final int FILE_SELECT_CODE = 0;
     public static final String FILE_PATH = "file_path";
+    static final Integer WRITE_EXST = 0x3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +53,8 @@ public class Home extends AppCompatActivity {
             }
         });
 
+        askForPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE,WRITE_EXST);
+
     }
 
     @Override
@@ -59,6 +66,7 @@ public class Home extends AppCompatActivity {
                     Uri uri = data.getData();
                     // Get the path
                     String path = uri.getLastPathSegment();
+                    Log.d("Home",path);
                     int index = path.lastIndexOf(File.separatorChar);
                     String name = path.substring(index+1);
 
@@ -77,4 +85,30 @@ public class Home extends AppCompatActivity {
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
+
+    private void askForPermission(String permission, Integer requestCode) {
+        if (ContextCompat.checkSelfPermission(Home.this, permission) != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(Home.this, permission)) {
+
+                //This is called if user has denied the permission before
+                //In this case I am just asking the permission again
+                ActivityCompat.requestPermissions(Home.this, new String[]{permission}, requestCode);
+
+            } else {
+
+                ActivityCompat.requestPermissions(Home.this, new String[]{permission}, requestCode);
+            }
+        } else {
+            //Toast.makeText(this, "" + permission + " is already granted.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    }
+
 }
+
