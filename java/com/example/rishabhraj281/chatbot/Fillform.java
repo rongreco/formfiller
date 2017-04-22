@@ -8,6 +8,7 @@ import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -178,6 +179,7 @@ public class Fillform extends AppCompatActivity {
             @Override
             public void onClick(View v){
                 String answer = c_ed.getText().toString();
+                validateInput(answer);
                 ed.get(q_no).setText(answer);
                 if(q_no < fields){
                     q_no += 1;
@@ -250,6 +252,28 @@ public class Fillform extends AppCompatActivity {
             }
         }
     }
+
+    void validateInput(String s){
+        if(s=="") return;
+        else{
+            if(q_type==Q_PHONE){
+                boolean valid = s.matches("[0-9]+") && (s.length() == 10) || (s.length() == 11 && s.charAt(0)=='0');
+                if(!valid){
+                    Toast.makeText(getApplicationContext(), "Not a valid number!", Toast.LENGTH_LONG).show();
+                }
+            }
+            else if(q_type==Q_EMAIL){
+                boolean valid = Patterns.EMAIL_ADDRESS.matcher(s).matches();
+                if(!valid){
+                    Toast.makeText(getApplicationContext(), "Not a valid email!", Toast.LENGTH_LONG).show();
+                }
+            }
+            else{
+
+            }
+        }
+        return;
+    }
     void handleSpecificQuestions(int q_type){
         if(q_type == Q_NONE || q_type == Q_PHONE || q_type == Q_EMAIL){
             //these simply require validation
@@ -314,14 +338,19 @@ public class Fillform extends AppCompatActivity {
             s = s.replaceAll("underscore","_");
             s = s.replaceAll(" ","");
             s = s.toLowerCase();
+            boolean valid = Patterns.EMAIL_ADDRESS.matcher(s).matches();
+            if(!valid){
+                String toSpeak = getString(R.string.invalid_input);
+                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
+
+            }
         }
         else if(q_type == Q_PHONE){
             s = s.replaceAll("-","");
             s = s.replaceAll("to","2");
             s = s.replaceAll(" ","");
-            boolean valid_num = s.matches("[0-9]+") && (s.length() == 10) || (s.length() == 11 );
+            boolean valid_num = s.matches("[0-9]+") && (s.length() == 10) || (s.length() == 11 && s.charAt(0)=='0');
             if(!valid_num){
-                Toast.makeText(getApplicationContext(), getString(R.string.invalid_input), Toast.LENGTH_SHORT).show();
                 String toSpeak = getString(R.string.invalid_input);
                 t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
             }
