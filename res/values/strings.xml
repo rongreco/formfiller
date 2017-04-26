@@ -6,5 +6,10 @@
     <string name="repeat">Repeat</string>
     <string name="previous">Previous</string>
     <string name="invalid_input">Couldn\'t properly recognize what you said. Please try again or enter through keypad</string>
+    <string name="user_submit">It seems you have either left or entered invalid input to few questions, would you like to proceed anyway? Please reply with a yes or no</string>
+    <string name="required_prompt">It seems you have not filled some required questions properly, please review and fill them before submitting</string>
     <string name="next">Next</string>
+    <string name="country">Country</string>
+    <string name="state">State</string>
+    <string name="city">City</string>
 </resources>
